@@ -178,6 +178,8 @@
       background: rgba(47,107,255,.10);
       box-shadow: 0 12px 28px rgba(47,107,255,.12);
     }
+
+    /* UPDATED: icon box supports photos with fallback SVG */
     .insulin .icon{
       width: 54px; height: 54px;
       border-radius: 14px;
@@ -186,7 +188,15 @@
       display:grid;
       place-items:center;
       flex: 0 0 auto;
+      overflow:hidden;
     }
+    .insulin .icon img{
+      width:100%;
+      height:100%;
+      object-fit: cover;
+      display:block;
+    }
+
     .insulin .meta{ flex: 1 1 auto; min-width: 0; }
     .insulin .name{
       font-weight: 750;
@@ -664,28 +674,29 @@
 
 <script>
 /* -----------------------------
-   Data: insulin list (with icons)
+   Data: insulin list (WITH IMAGES)
+   Put images in: ./images/<filename>
 ------------------------------ */
 const INSULINS = [
   // BASAL
-  { id:"glargine-u100", name:"Insulin glargine U-100", brand:"e.g., Lantus / Basaglar", type:"basal", notes:"Long-acting basal", icon:"pen" },
-  { id:"glargine-u300", name:"Insulin glargine U-300", brand:"e.g., Toujeo", type:"basal", notes:"Long-acting basal (more concentrated)", icon:"pen" },
-  { id:"degludec", name:"Insulin degludec", brand:"e.g., Tresiba", type:"basal", notes:"Ultra-long-acting basal", icon:"pen" },
-  { id:"detemir", name:"Insulin detemir", brand:"e.g., Levemir", type:"basal", notes:"Long-acting basal", icon:"pen" },
-  { id:"nph", name:"NPH insulin", brand:"Isophane (NPH)", type:"basal", notes:"Intermediate-acting basal", icon:"vial" },
-  { id:"ryzodeg", name:"Ryzodeg (degludec/aspart)", brand:"Co-formulation", type:"basal", notes:"Basal-containing co-formulation", icon:"mix" },
+  { id:"glargine-u100", name:"Insulin glargine U-100", brand:"e.g., Lantus / Basaglar", type:"basal", notes:"Long-acting basal", icon:"pen", img:"images/glargine-u100.jpg" },
+  { id:"glargine-u300", name:"Insulin glargine U-300", brand:"e.g., Toujeo", type:"basal", notes:"Long-acting basal (more concentrated)", icon:"pen", img:"images/glargine-u300.jpg" },
+  { id:"degludec", name:"Insulin degludec", brand:"e.g., Tresiba", type:"basal", notes:"Ultra-long-acting basal", icon:"pen", img:"images/degludec.jpg" },
+  { id:"detemir", name:"Insulin detemir", brand:"e.g., Levemir", type:"basal", notes:"Long-acting basal", icon:"pen", img:"images/detemir.jpg" },
+  { id:"nph", name:"NPH insulin", brand:"Isophane (NPH)", type:"basal", notes:"Intermediate-acting basal", icon:"vial", img:"images/nph.jpg" },
+  { id:"ryzodeg", name:"Ryzodeg (degludec/aspart)", brand:"Co-formulation", type:"basal", notes:"Basal-containing co-formulation", icon:"mix", img:"images/ryzodeg.jpg" },
 
   // BOLUS / OTHER
-  { id:"aspart", name:"Insulin aspart", brand:"e.g., NovoRapid", type:"other", notes:"Rapid-acting mealtime", icon:"bolt" },
-  { id:"lispro", name:"Insulin lispro", brand:"e.g., Humalog", type:"other", notes:"Rapid-acting mealtime", icon:"bolt" },
-  { id:"glulisine", name:"Insulin glulisine", brand:"e.g., Apidra", type:"other", notes:"Rapid-acting mealtime", icon:"bolt" },
-  { id:"regular", name:"Regular insulin", brand:"Human insulin", type:"other", notes:"Short-acting (mealtime)", icon:"vial" },
-  { id:"premix-7030", name:"Premix 70/30", brand:"NPH/Regular or analog mixes", type:"other", notes:"Premixed insulin", icon:"mix" },
-  { id:"biphasic-aspart", name:"Biphasic insulin aspart", brand:"e.g., NovoMix", type:"other", notes:"Premixed insulin", icon:"mix" },
-  { id:"lixilan", name:"Basal + GLP-1 combo (example)", brand:"e.g., iGlarLixi", type:"other", notes:"Not handled by this basal titration flow", icon:"mix" }
+  { id:"aspart", name:"Insulin aspart", brand:"e.g., NovoRapid", type:"other", notes:"Rapid-acting mealtime", icon:"bolt", img:"images/aspart.jpg" },
+  { id:"lispro", name:"Insulin lispro", brand:"e.g., Humalog", type:"other", notes:"Rapid-acting mealtime", icon:"bolt", img:"images/lispro.jpg" },
+  { id:"glulisine", name:"Insulin glulisine", brand:"e.g., Apidra", type:"other", notes:"Rapid-acting mealtime", icon:"bolt", img:"images/glulisine.jpg" },
+  { id:"regular", name:"Regular insulin", brand:"Human insulin", type:"other", notes:"Short-acting (mealtime)", icon:"vial", img:"images/regular.jpg" },
+  { id:"premix-7030", name:"Premix 70/30", brand:"NPH/Regular or analog mixes", type:"other", notes:"Premixed insulin", icon:"mix", img:"images/premix-7030.jpg" },
+  { id:"biphasic-aspart", name:"Biphasic insulin aspart", brand:"e.g., NovoMix", type:"other", notes:"Premixed insulin", icon:"mix", img:"images/biphasic-aspart.jpg" },
+  { id:"lixilan", name:"Basal + GLP-1 combo (example)", brand:"e.g., iGlarLixi", type:"other", notes:"Not handled by this basal titration flow", icon:"mix", img:"images/basal-glp1-combo.jpg" }
 ];
 
-// Simple inline SVG icons (no external image dependencies)
+/* Simple inline SVG icons (fallback if an image is missing) */
 function iconSVG(kind){
   const common = `width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"`;
   if(kind==="pen"){
@@ -711,7 +722,6 @@ function iconSVG(kind){
       <path d="M9 15c2-2 4 2 6 0" stroke="rgba(185,135,0,.85)" stroke-width="1.7" stroke-linecap="round"/>
     </svg>`;
   }
-  // bolt
   return `<svg ${common}>
     <path d="M13 2L5 14h6l-1 8 8-12h-6l1-8z" stroke="rgba(11,18,32,.85)" stroke-width="1.6" fill="rgba(185,135,0,.12)"/>
   </svg>`;
@@ -741,13 +751,8 @@ let state = loadState();
 /* -----------------------------
    Helpers
 ------------------------------ */
-function clamp(n, lo, hi){
-  return Math.max(lo, Math.min(hi, n));
-}
-function parseNum(v){
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
+function clamp(n, lo, hi){ return Math.max(lo, Math.min(hi, n)); }
+function parseNum(v){ const n = Number(v); return Number.isFinite(n) ? n : null; }
 function isoToday(){
   const d = new Date();
   const pad = x => String(x).padStart(2,"0");
@@ -765,22 +770,18 @@ function isBasalInsulin(insulinId){
 function chosenInsulin(){
   return INSULINS.find(x => x.id === state.selectedInsulinId) || null;
 }
-function saveState(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
+function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
 function loadState(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
     if(!raw) return structuredClone(defaultState);
     const parsed = JSON.parse(raw);
-    // migrate from older versions that had doseMin
     const merged = {
       ...structuredClone(defaultState),
       ...parsed,
       settings: { ...structuredClone(defaultState.settings), ...(parsed.settings||{}) },
       entries: Array.isArray(parsed.entries) ? parsed.entries : []
     };
-    // ensure doseMin removed and implied as 0
     if("doseMin" in merged.settings) delete merged.settings.doseMin;
     return merged;
   }catch{
@@ -803,9 +804,12 @@ function setPillsActive(step){
     p.classList.toggle("active", s === step);
   });
 }
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
 
 /* -----------------------------
-   Rendering: Step 1 insulin list
+   Rendering: Step 1 insulin list (UPDATED TO USE IMAGES)
 ------------------------------ */
 const insulinListEl = document.getElementById("insulinList");
 function renderInsulinList(){
@@ -816,6 +820,7 @@ function renderInsulinList(){
     div.setAttribute("role","button");
     div.setAttribute("tabindex","0");
     div.setAttribute("aria-label", `Select ${item.name}`);
+
     div.addEventListener("click", () => {
       state.selectedInsulinId = item.id;
       saveState();
@@ -831,13 +836,24 @@ function renderInsulinList(){
 
     const icon = document.createElement("div");
     icon.className = "icon";
-    icon.innerHTML = iconSVG(item.icon);
+
+    // If image exists, show it. If it fails to load, fallback to SVG icon.
+    if(item.img){
+      const img = document.createElement("img");
+      img.src = item.img;
+      img.alt = item.name;
+      img.loading = "lazy";
+      img.onerror = () => { icon.innerHTML = iconSVG(item.icon); };
+      icon.appendChild(img);
+    }else{
+      icon.innerHTML = iconSVG(item.icon);
+    }
 
     const meta = document.createElement("div");
     meta.className = "meta";
     meta.innerHTML = `
-      <p class="name">${item.name}</p>
-      <div class="sub">${item.brand} · ${item.notes}</div>
+      <p class="name">${escapeHtml(item.name)}</p>
+      <div class="sub">${escapeHtml(item.brand)} · ${escapeHtml(item.notes)}</div>
     `;
 
     const type = document.createElement("div");
@@ -853,8 +869,7 @@ function renderInsulinList(){
 
 const btnToStep2 = document.getElementById("btnToStep2");
 function renderStep1Gate(){
-  const ok = isBasalInsulin(state.selectedInsulinId);
-  btnToStep2.disabled = !ok;
+  btnToStep2.disabled = !isBasalInsulin(state.selectedInsulinId);
 }
 btnToStep2.addEventListener("click", () => setStep(2));
 document.getElementById("btnResetAll1").addEventListener("click", resetAll);
@@ -1000,9 +1015,6 @@ function renderHistory(){
     historyBody.appendChild(tr);
   });
 }
-function escapeHtml(s){
-  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
 
 function computeAvg3(){
   const last3 = state.entries.slice(-3);
@@ -1084,7 +1096,6 @@ function makeRecommendation({ entryDateISO, fbg, hadHypoNow }){
     reason = `✅ Your fasting glucose is within the target range. Maintain your current insulin dose.`;
   }
 
-  // doseMin removed; lower bound implied as 0
   const proposed = clamp(s.currentDose + delta, 0, s.doseMax);
 
   let clampNote = "";
@@ -1099,16 +1110,7 @@ function makeRecommendation({ entryDateISO, fbg, hadHypoNow }){
     recText = `${reason} Your dose remains ${s.currentDose} units tonight.${clampNote}`;
   }
 
-  return {
-    delta,
-    recDose: proposed,
-    recText,
-    usedAvg,
-    avg3,
-    urgentLow,
-    withinTarget: (basisValue >= lower && basisValue <= upper),
-    basisValue
-  };
+  return { delta, recDose: proposed, recText, usedAvg, avg3, urgentLow, withinTarget: (basisValue >= lower && basisValue <= upper), basisValue };
 }
 
 function renderResultBox(entry, rec){
