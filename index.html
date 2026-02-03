@@ -1,248 +1,1281 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Basal Insulin Self-Titration</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Basal Insulin Self-Titration Assistant</title>
+  <style>
+    :root{
+      /* Light mode */
+      --bg:#f6f8ff;
+      --card:#ffffff;
+      --card2:#f3f5ff;
+      --text:#0b1220;
+      --muted:#4a5878;
+      --accent:#2f6bff;
+      --good:#0ea874;
+      --warn:#b98700;
+      --bad:#d7264d;
+      --line: rgba(11,18,32,.12);
+      --shadow: 0 14px 34px rgba(11,18,32,.10);
+      --radius: 16px;
+      --radius2: 22px;
+      --focus: 0 0 0 3px rgba(47,107,255,.18);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: var(--sans);
+      background:
+        radial-gradient(1000px 500px at 20% -10%, rgba(47,107,255,.12), transparent 55%),
+        radial-gradient(900px 500px at 90% 0%, rgba(14,168,116,.10), transparent 60%),
+        linear-gradient(180deg, #ffffff, var(--bg));
+      color: var(--text);
+      min-height:100vh;
+    }
+    header{
+      padding: 28px 18px 8px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    h1{
+      margin:0;
+      font-size: 22px;
+      letter-spacing: .2px;
+    }
+    .subtitle{
+      margin: 8px 0 0;
+      color: var(--muted);
+      line-height: 1.45;
+      max-width: 920px;
+    }
+    .wrap{
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 18px;
+      padding-bottom: 60px;
+    }
 
-<style>
-:root{
-  --bg:#f6f8ff;
-  --card:#ffffff;
-  --text:#0b1220;
-  --muted:#4a5878;
-  --accent:#2f6bff;
-  --good:#0ea874;
-  --warn:#b98700;
-  --bad:#d7264d;
-  --line:rgba(11,18,32,.12);
-  --shadow:0 14px 34px rgba(11,18,32,.1);
-  --radius:18px;
-}
-*{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-  background:linear-gradient(180deg,#fff,var(--bg));
-  color:var(--text);
-}
-header{
-  max-width:1100px;
-  margin:auto;
-  padding:20px;
-  display:flex;
-  justify-content:space-between;
-  gap:12px;
-  flex-wrap:wrap;
-}
-h1{margin:0;font-size:22px}
-.subtitle{color:var(--muted);font-size:14px;max-width:820px}
-.lang select{
-  padding:8px 10px;
-  border-radius:10px;
-  border:1px solid var(--line);
-}
+    .steps{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin: 14px 0 18px;
+    }
+    .pill{
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.75);
+      padding: 8px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--muted);
+      display:flex;
+      align-items:center;
+      gap:8px;
+      box-shadow: 0 6px 16px rgba(11,18,32,.06);
+    }
+    .pill b{ color: var(--text); font-weight: 650; }
+    .pill .dot{
+      width:10px; height:10px; border-radius:99px;
+      background: rgba(11,18,32,.16);
+    }
+    .pill.active{
+      border-color: rgba(47,107,255,.45);
+      background: rgba(47,107,255,.10);
+      color: var(--text);
+    }
+    .pill.active .dot{ background: var(--accent); }
 
-.wrap{max-width:1100px;margin:auto;padding:20px}
-.card{
-  background:var(--card);
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
-  border:1px solid var(--line);
-  margin-bottom:20px;
-}
-.hd{
-  padding:14px 16px;
-  border-bottom:1px solid var(--line);
-  font-weight:700;
-}
-.bd{padding:16px}
+    .card{
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,1), rgba(255,255,255,.92));
+      border-radius: var(--radius2);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .hd{
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      display:flex;
+      justify-content: space-between;
+      align-items:center;
+      gap: 10px;
+      background: rgba(47,107,255,.03);
+    }
+    .card .hd h2{
+      margin:0;
+      font-size: 15px;
+      letter-spacing:.2px;
+    }
+    .tag{
+      font-size: 12px;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.8);
+      white-space:nowrap;
+    }
+    .card .bd{ padding: 16px; }
 
-.insulin-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
-  gap:12px;
-}
-.insulin{
-  display:flex;
-  gap:12px;
-  align-items:center;
-  border:1px solid var(--line);
-  border-radius:16px;
-  padding:12px;
-  cursor:pointer;
-  transition:.15s;
-}
-.insulin:hover{border-color:var(--accent)}
-.insulin.selected{
-  border-color:var(--accent);
-  background:rgba(47,107,255,.08);
-}
-.icon{
-  width:64px;height:64px;
-  border-radius:14px;
-  overflow:hidden;
-  border:1px solid var(--line);
-  background:#fff;
-  flex-shrink:0;
-}
-.icon img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
-.name{font-weight:700}
-.sub{font-size:12px;color:var(--muted)}
-.type{
-  margin-left:auto;
-  font-size:11px;
-  padding:6px 10px;
-  border-radius:999px;
-  border:1px solid var(--line);
-}
-.type.basal{background:rgba(14,168,116,.12)}
-.type.other{background:#f1f1f1}
+    .notice{
+      border:1px solid rgba(185,135,0,.25);
+      background: rgba(185,135,0,.08);
+      color: var(--text);
+      border-radius: var(--radius);
+      padding: 12px 12px;
+      line-height: 1.35;
+      margin: 10px 0 14px;
+      font-size: 13px;
+    }
+    .notice b{ color: var(--warn); }
+    .ok{
+      border-color: rgba(14,168,116,.25);
+      background: rgba(14,168,116,.07);
+    }
+    .ok b{ color: var(--good); }
+    .danger{
+      border-color: rgba(215,38,77,.25);
+      background: rgba(215,38,77,.07);
+    }
+    .danger b{ color: var(--bad); }
 
-button{
-  padding:10px 14px;
-  border-radius:12px;
-  border:1px solid var(--accent);
-  background:rgba(47,107,255,.15);
-  font-weight:700;
-  cursor:pointer;
-}
-button:disabled{opacity:.5;cursor:not-allowed}
+    .insulin-grid{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 12px;
+      margin-top: 8px;
+    }
+    .insulin{
+      grid-column: span 12;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.9);
+      border-radius: var(--radius2);
+      padding: 12px;
+      display:flex;
+      gap: 12px;
+      align-items:center;
+      cursor:pointer;
+      transition: transform .05s ease, border-color .12s ease, background .12s ease;
+      user-select:none;
+      box-shadow: 0 10px 22px rgba(11,18,32,.06);
+    }
+    @media (min-width: 740px){
+      .insulin{ grid-column: span 6; }
+    }
+    @media (min-width: 1020px){
+      .insulin{ grid-column: span 4; }
+    }
+    .insulin:hover{
+      transform: translateY(-1px);
+      border-color: rgba(47,107,255,.30);
+      background: rgba(47,107,255,.05);
+    }
+    .insulin.selected{
+      border-color: rgba(47,107,255,.55);
+      background: rgba(47,107,255,.10);
+      box-shadow: 0 12px 28px rgba(47,107,255,.12);
+    }
+    .insulin .icon{
+      width: 54px; height: 54px;
+      border-radius: 14px;
+      background: rgba(47,107,255,.05);
+      border: 1px solid var(--line);
+      display:grid;
+      place-items:center;
+      flex: 0 0 auto;
+    }
+    .insulin .meta{ flex: 1 1 auto; min-width: 0; }
+    .insulin .name{
+      font-weight: 750;
+      margin:0;
+      font-size: 14px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .insulin .sub{
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height:1.25;
+    }
+    .insulin .type{
+      margin-left:auto;
+      font-size: 11px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.75);
+      padding: 6px 10px;
+      border-radius: 999px;
+      color: var(--muted);
+      flex: 0 0 auto;
+      white-space:nowrap;
+    }
+    .type.basal{ border-color: rgba(14,168,116,.25); color: var(--text); background: rgba(14,168,116,.10); }
+    .type.other{ border-color: rgba(11,18,32,.14); }
 
-.notice{
-  background:rgba(185,135,0,.1);
-  border:1px solid rgba(185,135,0,.25);
-  border-radius:14px;
-  padding:12px;
-  font-size:13px;
-  margin-bottom:14px;
-}
+    .row{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 10px;
+      margin: 10px 0 0;
+    }
+    .field{
+      grid-column: span 12;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    @media (min-width: 740px){
+      .field.span6{ grid-column: span 6; }
+      .field.span4{ grid-column: span 4; }
+      .field.span3{ grid-column: span 3; }
+    }
+    label{
+      font-size: 12px;
+      color: var(--muted);
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    input, select, button, textarea{
+      font-family: inherit;
+      color: var(--text);
+    }
+    input, select, textarea{
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.95);
+      padding: 10px 12px;
+      outline:none;
+      font-size: 14px;
+      box-shadow: 0 8px 18px rgba(11,18,32,.05);
+    }
+    input:focus, select:focus, textarea:focus{
+      box-shadow: var(--focus);
+      border-color: rgba(47,107,255,.55);
+    }
 
-.hidden{display:none}
-</style>
+    .actions{
+      display:flex;
+      gap: 10px;
+      flex-wrap:wrap;
+      margin-top: 14px;
+    }
+    button{
+      border-radius: 14px;
+      border: 1px solid rgba(47,107,255,.35);
+      background: rgba(47,107,255,.12);
+      padding: 10px 14px;
+      cursor:pointer;
+      font-weight: 750;
+      font-size: 14px;
+      transition: transform .05s ease, background .12s ease, border-color .12s ease;
+      box-shadow: 0 10px 22px rgba(11,18,32,.06);
+    }
+    button:hover{
+      transform: translateY(-1px);
+      background: rgba(47,107,255,.18);
+      border-color: rgba(47,107,255,.55);
+    }
+    button.secondary{
+      border-color: rgba(11,18,32,.16);
+      background: rgba(255,255,255,.85);
+      color: var(--text);
+      font-weight: 700;
+    }
+    button.secondary:hover{
+      background: rgba(255,255,255,.98);
+      border-color: rgba(11,18,32,.24);
+    }
+    button.danger{
+      border-color: rgba(215,38,77,.30);
+      background: rgba(215,38,77,.10);
+    }
+    button.danger:hover{
+      border-color: rgba(215,38,77,.55);
+      background: rgba(215,38,77,.14);
+    }
+    button:disabled{
+      opacity:.5;
+      cursor:not-allowed;
+      transform:none;
+    }
+
+    .hidden{ display:none !important; }
+
+    .result{
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.9);
+      border-radius: var(--radius2);
+      padding: 14px;
+      line-height: 1.35;
+      box-shadow: 0 12px 26px rgba(11,18,32,.06);
+    }
+    .result .big{
+      font-size: 18px;
+      font-weight: 850;
+      margin: 0 0 8px;
+      letter-spacing:.2px;
+    }
+    .result .small{
+      color: var(--muted);
+      font-size: 13px;
+      margin: 8px 0 0;
+    }
+    .result.good{ border-color: rgba(14,168,116,.25); background: rgba(14,168,116,.07); }
+    .result.warn{ border-color: rgba(185,135,0,.25); background: rgba(185,135,0,.07); }
+    .result.bad{ border-color: rgba(215,38,77,.25); background: rgba(215,38,77,.07); }
+
+    .history{
+      margin-top: 12px;
+      border-top: 1px dashed var(--line);
+      padding-top: 12px;
+    }
+    table{
+      width:100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td{
+      border-bottom: 1px solid rgba(11,18,32,.10);
+      padding: 8px 6px;
+      text-align:left;
+      vertical-align: top;
+    }
+    th{ color: var(--muted); font-weight: 750; }
+    .mono{ font-family: var(--mono); }
+    .foot{
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .kpi{
+      display:flex; flex-wrap:wrap; gap:10px;
+      margin-top: 10px;
+    }
+    .kpi .box{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.9);
+      padding: 10px 12px;
+      border-radius: 14px;
+      min-width: 180px;
+      box-shadow: 0 10px 22px rgba(11,18,32,.05);
+    }
+    .kpi .box .t{ color: var(--muted); font-size: 12px; }
+    .kpi .box .v{ font-weight: 850; margin-top: 4px; }
+
+    .radioRow{
+      display:flex; gap:10px; flex-wrap:wrap;
+      margin-top: 10px;
+    }
+    .radioCard{
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.9);
+      border-radius: var(--radius2);
+      padding: 12px;
+      flex: 1 1 280px;
+      cursor:pointer;
+      transition: border-color .12s ease, background .12s ease, transform .05s ease;
+      min-width: 260px;
+      box-shadow: 0 10px 22px rgba(11,18,32,.05);
+    }
+    .radioCard:hover{
+      transform: translateY(-1px);
+      border-color: rgba(47,107,255,.30);
+      background: rgba(47,107,255,.05);
+    }
+    .radioCard.selected{
+      border-color: rgba(47,107,255,.55);
+      background: rgba(47,107,255,.10);
+      box-shadow: 0 12px 28px rgba(47,107,255,.10);
+    }
+    .radioCard .title{
+      display:flex; justify-content: space-between; align-items:center; gap:10px;
+      font-weight: 850;
+    }
+    .badge{
+      font-size: 11px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      border:1px solid rgba(14,168,116,.25);
+      background: rgba(14,168,116,.10);
+    }
+    .radioCard .desc{ margin-top: 6px; color: var(--muted); font-size: 13px; line-height:1.3; }
+
+    /* Tooltip for ? icon */
+    .help{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(11,18,32,.18);
+      background: rgba(255,255,255,.9);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      cursor: help;
+      position: relative;
+      user-select:none;
+    }
+    .help:focus{ outline:none; box-shadow: var(--focus); border-color: rgba(47,107,255,.45); }
+    .help .tip{
+      display:none;
+      position:absolute;
+      left: 22px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: min(320px, 70vw);
+      background: #ffffff;
+      border: 1px solid rgba(11,18,32,.14);
+      box-shadow: 0 14px 34px rgba(11,18,32,.12);
+      border-radius: 14px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 12px;
+      line-height: 1.35;
+      z-index: 10;
+    }
+    .help:hover .tip,
+    .help:focus .tip{
+      display:block;
+    }
+  </style>
 </head>
 
 <body>
-
 <header>
-  <div>
-    <h1 id="t-title">Basal Insulin Self-Titration</h1>
-    <div class="subtitle" id="t-sub">
-      Enter fasting glucose and symptoms to receive basal insulin dose guidance.
-    </div>
-  </div>
-  <div class="lang">
-    <select id="lang">
-      <option value="en">English</option>
-      <option value="ms">Bahasa Melayu</option>
-    </select>
+  <h1>Basal Insulin Self-Titration Assistant</h1>
+  <p class="subtitle">
+    Patient enters fasting glucose and hypoglycaemia symptoms. The system recommends basal dose adjustment within clinician-set targets.
+    This tool does not replace clinician judgment or urgent medical care.
+  </p>
+
+  <div class="steps" id="stepPills" aria-label="Progress">
+    <div class="pill active" data-step="1"><span class="dot"></span><b>1</b> Choose insulin</div>
+    <div class="pill" data-step="2"><span class="dot"></span><b>2</b> Choose strategy</div>
+    <div class="pill" data-step="3"><span class="dot"></span><b>3</b> Clinician settings</div>
+    <div class="pill" data-step="4"><span class="dot"></span><b>4</b> Daily entry</div>
   </div>
 </header>
 
-<div class="wrap">
-
-<div class="card">
-  <div class="hd" id="t-step1">Step 1: Select insulin</div>
-  <div class="bd">
-
-    <div class="notice" id="t-rule">
-      You can only continue if a basal insulin (including Ryzodeg) is selected.
+<main class="wrap">
+  <!-- STEP 1 -->
+  <section class="card" id="step1">
+    <div class="hd">
+      <h2>Step 1: Select insulin</h2>
+      <span class="tag">Continue only if basal (including Ryzodeg)</span>
     </div>
+    <div class="bd">
+      <div class="notice">
+        <b>Rule:</b> You can only proceed if you select a <b>basal insulin</b>. Non-basal insulins are shown for clarity but are not eligible for this titration flow.
+      </div>
 
-    <div class="insulin-grid" id="insulinList"></div>
+      <div class="insulin-grid" id="insulinList" aria-label="Insulin options"></div>
 
-    <br>
-    <button id="btnNext" disabled>Continue</button>
+      <div class="actions">
+        <button id="btnToStep2" disabled>Continue</button>
+        <button class="secondary" id="btnResetAll1" type="button">Reset all data</button>
+      </div>
+      <p class="foot">
+        Note: “Basal” here includes long-acting basal insulins and basal-containing co-formulations such as Ryzodeg.
+      </p>
+    </div>
+  </section>
 
-  </div>
-</div>
+  <!-- STEP 2 -->
+  <section class="card hidden" id="step2">
+    <div class="hd">
+      <h2>Step 2: Choose titration strategy</h2>
+      <span class="tag" id="chosenInsulinTag"></span>
+    </div>
+    <div class="bd">
+      <div class="radioRow" role="radiogroup" aria-label="Titration strategy">
+        <div class="radioCard" id="optDaily" tabindex="0" role="radio" aria-checked="false">
+          <div class="title">
+            <span>Daily Adjustment Option</span>
+          </div>
+          <div class="desc">
+            Recommendations based on today’s fasting glucose and hypoglycaemia in the last 24 hours.
+          </div>
+        </div>
 
-</div>
+        <div class="radioCard selected" id="optAvg3" tabindex="0" role="radio" aria-checked="true">
+          <div class="title">
+            <span>3-Day Averaging Option</span>
+            <span class="badge">Recommended standard</span>
+          </div>
+          <div class="desc">
+            Uses the average of the past 3 consecutive fasting readings and checks hypoglycaemia in the last 72 hours. Helps reduce overcorrection.
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="btnToStep3">Continue</button>
+        <button class="secondary" id="btnBack1">Back</button>
+      </div>
+      <p class="foot">
+        The selected strategy should match the clinical settings agreed with your clinician.
+      </p>
+    </div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="card hidden" id="step3">
+    <div class="hd">
+      <h2>Step 3: Clinician target range and dose limits</h2>
+      <span class="tag">mmol/L</span>
+    </div>
+    <div class="bd">
+      <div class="notice ok">
+        <b>Targets:</b> Enter the prescribed fasting blood glucose (FBG) range and the maximum allowed basal dose.
+      </div>
+
+      <div class="row">
+        <div class="field span4">
+          <label for="fbgLow">Lower FBG target (mmol/L)</label>
+          <input id="fbgLow" type="number" inputmode="decimal" step="0.1" placeholder="e.g., 4.4" />
+        </div>
+        <div class="field span4">
+          <label for="fbgHigh">Upper FBG target (mmol/L)</label>
+          <input id="fbgHigh" type="number" inputmode="decimal" step="0.1" placeholder="e.g., 7.2" />
+        </div>
+
+        <!-- Removed Minimum basal dose (units) -->
+        <div class="field span4">
+          <label for="doseMax">Maximum basal dose (units)</label>
+          <input id="doseMax" type="number" inputmode="numeric" step="1" placeholder="e.g., 60" />
+        </div>
+
+        <div class="field span6">
+          <label for="currentDose">Current basal dose tonight (units)</label>
+          <input id="currentDose" type="number" inputmode="numeric" step="1" placeholder="e.g., 14" />
+        </div>
+
+        <div class="field span6">
+          <label for="patientName">Patient display name (optional)</label>
+          <input id="patientName" type="text" placeholder="e.g., Ahmad" />
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="btnSaveSettings">Save & continue</button>
+        <button class="secondary" id="btnBack2">Back</button>
+      </div>
+
+      <p class="foot">
+        Safety: This page stores entries in your browser (localStorage). Use a shared device only if appropriate.
+      </p>
+    </div>
+  </section>
+
+  <!-- STEP 4 -->
+  <section class="card hidden" id="step4">
+    <div class="hd">
+      <h2>Step 4: Daily fasting glucose entry</h2>
+      <span class="tag" id="strategyTag"></span>
+    </div>
+    <div class="bd">
+      <div class="kpi" id="kpis"></div>
+
+      <div class="notice">
+        Enter today’s fasting blood glucose (FBG). Then indicate whether you had any hypoglycaemia symptoms or any confirmed low blood glucose
+        <b>&lt; 4.0 mmol/L</b> in the last <span id="hypoWindowText">72</span> hours.
+      </div>
+
+      <div class="row">
+        <div class="field span4">
+          <label for="todayFbg">Today’s fasting glucose (mmol/L)</label>
+          <input id="todayFbg" type="number" inputmode="decimal" step="0.1" placeholder="e.g., 8.1" />
+        </div>
+
+        <div class="field span4">
+          <label for="hadHypo">
+            Any hypo symptoms or confirmed low &lt;4.0 in window?
+            <span class="help" tabindex="0" aria-label="Hypoglycaemia symptoms help">
+              ?
+              <span class="tip">
+                Examples of hypoglycaemia symptoms:
+                <br><b>•</b> Sweating
+                <br><b>•</b> Shakiness or tremor
+                <br><b>•</b> Dizziness or lightheadedness
+                <br><b>•</b> Palpitations
+                <br><b>•</b> Hunger
+                <br><b>•</b> Confusion, blurred vision
+                <br><br>Also select “Yes” if you had a confirmed glucose reading <b>&lt; 4.0 mmol/L</b>.
+              </span>
+            </span>
+          </label>
+          <select id="hadHypo">
+            <option value="no">No</option>
+            <option value="yes">Yes</option>
+          </select>
+        </div>
+
+        <div class="field span4">
+          <label for="entryDate">Entry date</label>
+          <input id="entryDate" type="date" />
+        </div>
+
+        <div class="field span12">
+          <label for="notes">Notes (optional)</label>
+          <textarea id="notes" rows="2" placeholder="e.g., missed meal, illness, increased activity"></textarea>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="btnAddEntry">Add entry & get recommendation</button>
+        <button class="secondary" id="btnBack3">Back</button>
+        <button class="danger" id="btnResetAll4" type="button">Reset all data</button>
+      </div>
+
+      <div style="margin-top:14px" id="resultWrap" class="hidden" aria-live="polite"></div>
+
+      <div class="history">
+        <h3 style="margin:0 0 10px; font-size: 14px;">History</h3>
+        <div style="overflow:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th style="min-width:110px;">Date</th>
+                <th style="min-width:120px;">FBG (mmol/L)</th>
+                <th style="min-width:120px;">Hypo?</th>
+                <th style="min-width:140px;">Dose after rec (units)</th>
+                <th>Recommendation text</th>
+              </tr>
+            </thead>
+            <tbody id="historyBody"></tbody>
+          </table>
+        </div>
+        <p class="foot">
+          Emergency: If severe hypoglycaemia, confusion, seizure, fainting, or you are unwell, seek urgent medical care.
+        </p>
+      </div>
+    </div>
+  </section>
+</main>
 
 <script>
-/* =============================
-   INSULIN DATA WITH IMAGES
-============================= */
+/* -----------------------------
+   Data: insulin list (with icons)
+------------------------------ */
 const INSULINS = [
-  {id:"glargine-u100",name:"Insulin glargine U-100",brand:"Lantus / Basaglar",type:"basal",img:"images/glargine-u100.jpg"},
-  {id:"glargine-u300",name:"Insulin glargine U-300",brand:"Toujeo",type:"basal",img:"images/glargine-u300.jpg"},
-  {id:"degludec",name:"Insulin degludec",brand:"Tresiba",type:"basal",img:"images/degludec.jpg"},
-  {id:"detemir",name:"Insulin detemir",brand:"Levemir",type:"basal",img:"images/detemir.jpg"},
-  {id:"nph",name:"NPH insulin",brand:"Isophane (NPH)",type:"basal",img:"images/nph.jpg"},
-  {id:"ryzodeg",name:"Ryzodeg",brand:"Degludec / Aspart",type:"basal",img:"images/ryzodeg.jpg"},
+  // BASAL
+  { id:"glargine-u100", name:"Insulin glargine U-100", brand:"e.g., Lantus / Basaglar", type:"basal", notes:"Long-acting basal", icon:"pen" },
+  { id:"glargine-u300", name:"Insulin glargine U-300", brand:"e.g., Toujeo", type:"basal", notes:"Long-acting basal (more concentrated)", icon:"pen" },
+  { id:"degludec", name:"Insulin degludec", brand:"e.g., Tresiba", type:"basal", notes:"Ultra-long-acting basal", icon:"pen" },
+  { id:"detemir", name:"Insulin detemir", brand:"e.g., Levemir", type:"basal", notes:"Long-acting basal", icon:"pen" },
+  { id:"nph", name:"NPH insulin", brand:"Isophane (NPH)", type:"basal", notes:"Intermediate-acting basal", icon:"vial" },
+  { id:"ryzodeg", name:"Ryzodeg (degludec/aspart)", brand:"Co-formulation", type:"basal", notes:"Basal-containing co-formulation", icon:"mix" },
 
-  {id:"aspart",name:"Insulin aspart",brand:"NovoRapid",type:"other",img:"images/aspart.jpg"},
-  {id:"lispro",name:"Insulin lispro",brand:"Humalog",type:"other",img:"images/lispro.jpg"},
-  {id:"glulisine",name:"Insulin glulisine",brand:"Apidra",type:"other",img:"images/glulisine.jpg"},
-  {id:"regular",name:"Regular insulin",brand:"Human insulin",type:"other",img:"images/regular.jpg"},
-  {id:"premix-7030",name:"Premix 70/30",brand:"NPH / Regular",type:"other",img:"images/premix-7030.jpg"},
-  {id:"biphasic-aspart",name:"Biphasic insulin aspart",brand:"NovoMix",type:"other",img:"images/biphasic-aspart.jpg"}
+  // BOLUS / OTHER
+  { id:"aspart", name:"Insulin aspart", brand:"e.g., NovoRapid", type:"other", notes:"Rapid-acting mealtime", icon:"bolt" },
+  { id:"lispro", name:"Insulin lispro", brand:"e.g., Humalog", type:"other", notes:"Rapid-acting mealtime", icon:"bolt" },
+  { id:"glulisine", name:"Insulin glulisine", brand:"e.g., Apidra", type:"other", notes:"Rapid-acting mealtime", icon:"bolt" },
+  { id:"regular", name:"Regular insulin", brand:"Human insulin", type:"other", notes:"Short-acting (mealtime)", icon:"vial" },
+  { id:"premix-7030", name:"Premix 70/30", brand:"NPH/Regular or analog mixes", type:"other", notes:"Premixed insulin", icon:"mix" },
+  { id:"biphasic-aspart", name:"Biphasic insulin aspart", brand:"e.g., NovoMix", type:"other", notes:"Premixed insulin", icon:"mix" },
+  { id:"lixilan", name:"Basal + GLP-1 combo (example)", brand:"e.g., iGlarLixi", type:"other", notes:"Not handled by this basal titration flow", icon:"mix" }
 ];
 
-let selectedInsulin = null;
+// Simple inline SVG icons (no external image dependencies)
+function iconSVG(kind){
+  const common = `width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"`;
+  if(kind==="pen"){
+    return `<svg ${common}>
+      <path d="M7 17l10-10 2 2-10 10H7z" stroke="rgba(11,18,32,.92)" stroke-width="1.6"/>
+      <path d="M6.8 17.2l.4-2.7 2.3 2.3-2.7.4z" fill="rgba(47,107,255,.55)"/>
+      <path d="M14.5 6.5l1-1c.6-.6 1.6-.6 2.2 0l.8.8c.6.6.6 1.6 0 2.2l-1 1" stroke="rgba(11,18,32,.55)" stroke-width="1.4"/>
+    </svg>`;
+  }
+  if(kind==="vial"){
+    return `<svg ${common}>
+      <path d="M8 3h8v4H8V3z" stroke="rgba(11,18,32,.82)" stroke-width="1.6"/>
+      <path d="M9 7h6v14H9V7z" stroke="rgba(11,18,32,.82)" stroke-width="1.6"/>
+      <path d="M10 11h4" stroke="rgba(47,107,255,.85)" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M10 14h4" stroke="rgba(47,107,255,.55)" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>`;
+  }
+  if(kind==="mix"){
+    return `<svg ${common}>
+      <path d="M7 4h10v4H7V4z" stroke="rgba(11,18,32,.82)" stroke-width="1.6"/>
+      <path d="M8 8h8v12H8V8z" stroke="rgba(11,18,32,.82)" stroke-width="1.6"/>
+      <path d="M9 12c2-2 4 2 6 0" stroke="rgba(14,168,116,.9)" stroke-width="1.7" stroke-linecap="round"/>
+      <path d="M9 15c2-2 4 2 6 0" stroke="rgba(185,135,0,.85)" stroke-width="1.7" stroke-linecap="round"/>
+    </svg>`;
+  }
+  // bolt
+  return `<svg ${common}>
+    <path d="M13 2L5 14h6l-1 8 8-12h-6l1-8z" stroke="rgba(11,18,32,.85)" stroke-width="1.6" fill="rgba(185,135,0,.12)"/>
+  </svg>`;
+}
 
-/* =============================
-   RENDER INSULIN LIST
-============================= */
-const insulinList = document.getElementById("insulinList");
-const btnNext = document.getElementById("btnNext");
+/* -----------------------------
+   App state + storage
+------------------------------ */
+const STORAGE_KEY = "basal_titration_v1";
+const defaultState = {
+  step: 1,
+  selectedInsulinId: null,
+  strategy: "avg3", // "daily" | "avg3"
+  settings: {
+    fbgLow: 4.4,
+    fbgHigh: 7.2,
+    doseMax: 60,
+    currentDose: 10,
+    patientName: ""
+  },
+  entries: [],
+  lastIncreaseDateISO: null
+};
 
-function renderInsulins(){
-  insulinList.innerHTML="";
-  INSULINS.forEach(i=>{
-    const div=document.createElement("div");
-    div.className="insulin"+(selectedInsulin===i.id?" selected":"");
-    div.onclick=()=>{
-      selectedInsulin=i.id;
-      renderInsulins();
-      btnNext.disabled = i.type!=="basal";
+let state = loadState();
+
+/* -----------------------------
+   Helpers
+------------------------------ */
+function clamp(n, lo, hi){
+  return Math.max(lo, Math.min(hi, n));
+}
+function parseNum(v){
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+function isoToday(){
+  const d = new Date();
+  const pad = x => String(x).padStart(2,"0");
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+function daysBetweenISO(aISO, bISO){
+  const a = new Date(aISO + "T00:00:00");
+  const b = new Date(bISO + "T00:00:00");
+  return Math.round((b - a) / (1000*60*60*24));
+}
+function isBasalInsulin(insulinId){
+  const it = INSULINS.find(x => x.id === insulinId);
+  return it && it.type === "basal";
+}
+function chosenInsulin(){
+  return INSULINS.find(x => x.id === state.selectedInsulinId) || null;
+}
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return structuredClone(defaultState);
+    const parsed = JSON.parse(raw);
+    // migrate from older versions that had doseMin
+    const merged = {
+      ...structuredClone(defaultState),
+      ...parsed,
+      settings: { ...structuredClone(defaultState.settings), ...(parsed.settings||{}) },
+      entries: Array.isArray(parsed.entries) ? parsed.entries : []
     };
-
-    div.innerHTML=`
-      <div class="icon">
-        <img src="${i.img}" alt="${i.name}" onerror="this.style.display='none'">
-      </div>
-      <div>
-        <div class="name">${i.name}</div>
-        <div class="sub">${i.brand}</div>
-      </div>
-      <div class="type ${i.type}">${i.type==="basal"?"Basal":"Other"}</div>
-    `;
-    insulinList.appendChild(div);
+    // ensure doseMin removed and implied as 0
+    if("doseMin" in merged.settings) delete merged.settings.doseMin;
+    return merged;
+  }catch{
+    return structuredClone(defaultState);
+  }
+}
+function resetAll(){
+  state = structuredClone(defaultState);
+  saveState();
+  renderAll();
+}
+function setStep(n){
+  state.step = n;
+  saveState();
+  renderAll();
+}
+function setPillsActive(step){
+  document.querySelectorAll(".pill").forEach(p => {
+    const s = Number(p.getAttribute("data-step"));
+    p.classList.toggle("active", s === step);
   });
 }
-renderInsulins();
 
-/* =============================
-   LANGUAGE
-============================= */
-const TEXT = {
-  en:{
-    title:"Basal Insulin Self-Titration",
-    sub:"Enter fasting glucose and symptoms to receive basal insulin dose guidance.",
-    step1:"Step 1: Select insulin",
-    rule:"You can only continue if a basal insulin (including Ryzodeg) is selected."
-  },
-  ms:{
-    title:"Pelarasan Kendiri Insulin Basal",
-    sub:"Masukkan bacaan glukosa puasa dan gejala untuk mendapatkan cadangan dos insulin basal.",
-    step1:"Langkah 1: Pilih insulin",
-    rule:"Anda hanya boleh meneruskan jika insulin basal (termasuk Ryzodeg) dipilih."
+/* -----------------------------
+   Rendering: Step 1 insulin list
+------------------------------ */
+const insulinListEl = document.getElementById("insulinList");
+function renderInsulinList(){
+  insulinListEl.innerHTML = "";
+  INSULINS.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "insulin" + (state.selectedInsulinId === item.id ? " selected" : "");
+    div.setAttribute("role","button");
+    div.setAttribute("tabindex","0");
+    div.setAttribute("aria-label", `Select ${item.name}`);
+    div.addEventListener("click", () => {
+      state.selectedInsulinId = item.id;
+      saveState();
+      renderInsulinList();
+      renderStep1Gate();
+    });
+    div.addEventListener("keydown", (e) => {
+      if(e.key === "Enter" || e.key === " "){
+        e.preventDefault();
+        div.click();
+      }
+    });
+
+    const icon = document.createElement("div");
+    icon.className = "icon";
+    icon.innerHTML = iconSVG(item.icon);
+
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.innerHTML = `
+      <p class="name">${item.name}</p>
+      <div class="sub">${item.brand} · ${item.notes}</div>
+    `;
+
+    const type = document.createElement("div");
+    type.className = "type " + (item.type === "basal" ? "basal" : "other");
+    type.textContent = (item.type === "basal") ? "Basal" : "Other";
+
+    div.appendChild(icon);
+    div.appendChild(meta);
+    div.appendChild(type);
+    insulinListEl.appendChild(div);
+  });
+}
+
+const btnToStep2 = document.getElementById("btnToStep2");
+function renderStep1Gate(){
+  const ok = isBasalInsulin(state.selectedInsulinId);
+  btnToStep2.disabled = !ok;
+}
+btnToStep2.addEventListener("click", () => setStep(2));
+document.getElementById("btnResetAll1").addEventListener("click", resetAll);
+
+/* -----------------------------
+   Step 2 strategy
+------------------------------ */
+const optDaily = document.getElementById("optDaily");
+const optAvg3 = document.getElementById("optAvg3");
+const chosenInsulinTag = document.getElementById("chosenInsulinTag");
+
+function renderStrategy(){
+  optDaily.classList.toggle("selected", state.strategy === "daily");
+  optAvg3.classList.toggle("selected", state.strategy === "avg3");
+  optDaily.setAttribute("aria-checked", state.strategy === "daily" ? "true" : "false");
+  optAvg3.setAttribute("aria-checked", state.strategy === "avg3" ? "true" : "false");
+  const ins = chosenInsulin();
+  chosenInsulinTag.textContent = ins ? `Selected: ${ins.name}` : "Selected: (none)";
+}
+function setStrategy(s){
+  state.strategy = s;
+  saveState();
+  renderStrategy();
+  renderStep4StrategyText();
+}
+
+[optDaily, optAvg3].forEach(el => {
+  el.addEventListener("click", () => setStrategy(el.id === "optDaily" ? "daily" : "avg3"));
+  el.addEventListener("keydown", (e) => {
+    if(e.key === "Enter" || e.key === " "){
+      e.preventDefault();
+      el.click();
+    }
+  });
+});
+
+document.getElementById("btnToStep3").addEventListener("click", () => setStep(3));
+document.getElementById("btnBack1").addEventListener("click", () => setStep(1));
+
+/* -----------------------------
+   Step 3 settings (doseMin removed)
+------------------------------ */
+const fbgLowEl = document.getElementById("fbgLow");
+const fbgHighEl = document.getElementById("fbgHigh");
+const doseMaxEl = document.getElementById("doseMax");
+const currentDoseEl = document.getElementById("currentDose");
+const patientNameEl = document.getElementById("patientName");
+
+function renderSettings(){
+  fbgLowEl.value = state.settings.fbgLow;
+  fbgHighEl.value = state.settings.fbgHigh;
+  doseMaxEl.value = state.settings.doseMax;
+  currentDoseEl.value = state.settings.currentDose;
+  patientNameEl.value = state.settings.patientName || "";
+}
+
+function validateSettings(){
+  const fbgLow = parseNum(fbgLowEl.value);
+  const fbgHigh = parseNum(fbgHighEl.value);
+  const doseMax = parseNum(doseMaxEl.value);
+  const currentDose = parseNum(currentDoseEl.value);
+
+  const errors = [];
+  if(fbgLow === null || fbgHigh === null || fbgLow <= 0 || fbgHigh <= 0) errors.push("Enter valid FBG targets.");
+  if(fbgLow !== null && fbgHigh !== null && fbgLow >= fbgHigh) errors.push("Lower target must be less than upper target.");
+  if(doseMax === null || doseMax <= 0) errors.push("Enter a valid maximum dose.");
+  if(currentDose === null || currentDose < 0) errors.push("Enter a valid current dose.");
+  if(doseMax !== null && currentDose !== null && currentDose > doseMax) errors.push("Current dose is above maximum dose.");
+  return errors;
+}
+
+document.getElementById("btnSaveSettings").addEventListener("click", () => {
+  const errs = validateSettings();
+  if(errs.length){
+    alert(errs.join("\n"));
+    return;
   }
-};
+  state.settings = {
+    fbgLow: Number(fbgLowEl.value),
+    fbgHigh: Number(fbgHighEl.value),
+    doseMax: Math.round(Number(doseMaxEl.value)),
+    currentDose: Math.round(Number(currentDoseEl.value)),
+    patientName: (patientNameEl.value || "").trim()
+  };
+  saveState();
+  setStep(4);
+});
 
-document.getElementById("lang").onchange=e=>{
-  const L=TEXT[e.target.value];
-  document.getElementById("t-title").textContent=L.title;
-  document.getElementById("t-sub").textContent=L.sub;
-  document.getElementById("t-step1").textContent=L.step1;
-  document.getElementById("t-rule").textContent=L.rule;
-};
+document.getElementById("btnBack2").addEventListener("click", () => setStep(2));
+
+/* -----------------------------
+   Step 4 logic: recommendations
+------------------------------ */
+const strategyTag = document.getElementById("strategyTag");
+const hypoWindowText = document.getElementById("hypoWindowText");
+const todayFbgEl = document.getElementById("todayFbg");
+const hadHypoEl = document.getElementById("hadHypo");
+const entryDateEl = document.getElementById("entryDate");
+const notesEl = document.getElementById("notes");
+const resultWrap = document.getElementById("resultWrap");
+const historyBody = document.getElementById("historyBody");
+const kpisEl = document.getElementById("kpis");
+
+function renderStep4StrategyText(){
+  if(state.strategy === "daily"){
+    strategyTag.textContent = "Daily adjustment";
+    hypoWindowText.textContent = "24";
+  }else{
+    strategyTag.textContent = "3-day averaging (recommended)";
+    hypoWindowText.textContent = "72";
+  }
+}
+function renderKPIs(){
+  const s = state.settings;
+  const nm = s.patientName ? s.patientName : "Patient";
+  const ins = chosenInsulin();
+  const last = state.entries.length ? state.entries[state.entries.length - 1] : null;
+
+  const avg3 = computeAvg3();
+  const avgText = (avg3 !== null) ? `${avg3.toFixed(1)} mmol/L` : "Not enough data";
+  const lastText = last ? `${Number(last.fbg).toFixed(1)} mmol/L (${last.dateISO})` : "None yet";
+
+  kpisEl.innerHTML = `
+    <div class="box"><div class="t">Name</div><div class="v">${escapeHtml(nm)}</div></div>
+    <div class="box"><div class="t">Insulin</div><div class="v">${ins ? escapeHtml(ins.name) : "None"}</div></div>
+    <div class="box"><div class="t">Target FBG</div><div class="v">${s.fbgLow.toFixed(1)}–${s.fbgHigh.toFixed(1)} mmol/L</div></div>
+    <div class="box"><div class="t">Current dose tonight</div><div class="v"><span class="mono">${escapeHtml(s.currentDose)}</span> units</div></div>
+    <div class="box"><div class="t">Latest FBG</div><div class="v">${escapeHtml(lastText)}</div></div>
+    <div class="box"><div class="t">3-reading average</div><div class="v">${escapeHtml(avgText)}</div></div>
+  `;
+}
+function renderHistory(){
+  historyBody.innerHTML = "";
+  state.entries.slice().reverse().forEach(e => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="mono">${escapeHtml(e.dateISO)}</td>
+      <td class="mono">${Number(e.fbg).toFixed(1)}</td>
+      <td>${e.hadHypo ? "Yes" : "No"}</td>
+      <td class="mono">${e.recDose}</td>
+      <td>${escapeHtml(e.recText)}</td>
+    `;
+    historyBody.appendChild(tr);
+  });
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function computeAvg3(){
+  const last3 = state.entries.slice(-3);
+  if(last3.length < 3) return null;
+  const sum = last3.reduce((a,x) => a + Number(x.fbg), 0);
+  return sum / 3;
+}
+
+function hypoInWindow(entryDateISO){
+  const windowDays = (state.strategy === "daily") ? 1 : 3;
+  for(let i = state.entries.length - 1; i >= 0; i--){
+    const e = state.entries[i];
+    const diff = daysBetweenISO(e.dateISO, entryDateISO);
+    if(diff < 0) continue;
+    if(diff === 0) continue;
+    if(diff <= windowDays - 1 && e.hadHypo) return true;
+    if(diff > windowDays - 1) break;
+  }
+  return false;
+}
+
+function canIncreaseToday(entryDateISO){
+  if(!state.lastIncreaseDateISO) return true;
+  const diff = daysBetweenISO(state.lastIncreaseDateISO, entryDateISO);
+  return diff >= 3;
+}
+
+function makeRecommendation({ entryDateISO, fbg, hadHypoNow }){
+  const s = state.settings;
+  const lower = s.fbgLow;
+  const upper = s.fbgHigh;
+
+  const urgentLow = fbg < 4.0;
+  const windowHypo = hadHypoNow || hypoInWindow(entryDateISO);
+  const usedAvg = (state.strategy === "avg3");
+
+  let basisValue = fbg;
+  let avg3 = null;
+
+  if(usedAvg){
+    const prev2 = state.entries.slice(-2);
+    if(prev2.length < 2){
+      avg3 = null;
+      basisValue = fbg;
+    }else{
+      const sum = prev2.reduce((a,x)=>a+Number(x.fbg),0) + fbg;
+      avg3 = sum / 3;
+      basisValue = avg3;
+    }
+  }
+
+  let delta = 0;
+  let reason = "";
+
+  if(windowHypo || urgentLow){
+    delta = -2;
+    if(urgentLow){
+      reason = `⚠️ Low glucose detected (<4.0 mmol/L). Please reduce your basal insulin by 2 units and monitor closely.`;
+    }else{
+      reason = `⚠️ Hypoglycaemia symptoms or confirmed low reported in the last ${usedAvg ? "72" : "24"} hours. Please reduce your basal insulin by 2 units and monitor closely.`;
+    }
+  }else if(basisValue < lower){
+    delta = -2;
+    reason = `⚠️ Your fasting glucose is below your target range. Please reduce your basal insulin by 2 units and monitor closely.`;
+  }else if(basisValue > upper){
+    if(canIncreaseToday(entryDateISO)){
+      delta = +2;
+      if(usedAvg && avg3 !== null){
+        reason = `📈 Your average fasting glucose over the last 3 days (including today) is ${avg3.toFixed(1)} mmol/L, which is above your target range. Please increase your basal insulin by 2 units tonight.`;
+      }else{
+        reason = `📈 Your fasting glucose today is ${fbg.toFixed(1)} mmol/L, which is above your target range. Please increase your basal insulin by 2 units tonight.`;
+      }
+    }else{
+      delta = 0;
+      reason = `➖ Your fasting glucose is above target, but dose increases are recommended no more than once every 3 days. Please maintain your current dose today and re-enter readings until the next adjustment window.`;
+    }
+  }else{
+    delta = 0;
+    reason = `✅ Your fasting glucose is within the target range. Maintain your current insulin dose.`;
+  }
+
+  // doseMin removed; lower bound implied as 0
+  const proposed = clamp(s.currentDose + delta, 0, s.doseMax);
+
+  let clampNote = "";
+  if(proposed !== s.currentDose + delta){
+    clampNote = ` (Dose limited by clinician band: 0–${s.doseMax} units.)`;
+  }
+
+  let recText = "";
+  if(delta !== 0){
+    recText = `${reason} Your dose: ${s.currentDose} → ${proposed} units tonight.${clampNote}`;
+  }else{
+    recText = `${reason} Your dose remains ${s.currentDose} units tonight.${clampNote}`;
+  }
+
+  return {
+    delta,
+    recDose: proposed,
+    recText,
+    usedAvg,
+    avg3,
+    urgentLow,
+    withinTarget: (basisValue >= lower && basisValue <= upper),
+    basisValue
+  };
+}
+
+function renderResultBox(entry, rec){
+  let klass = "good";
+  if(rec.delta > 0) klass = "warn";
+  if(rec.delta < 0) klass = rec.urgentLow || entry.hadHypo ? "bad" : "warn";
+
+  const basisLine = rec.usedAvg
+    ? (rec.avg3 !== null
+      ? `Basis: 3-day average = <b>${rec.avg3.toFixed(1)} mmol/L</b>`
+      : `Basis: not enough prior readings for 3-day average, used today’s FBG = <b>${entry.fbg.toFixed(1)} mmol/L</b>`)
+    : `Basis: today’s FBG = <b>${entry.fbg.toFixed(1)} mmol/L</b>`;
+
+  const html = `
+    <div class="result ${klass}">
+      <div class="big">${escapeHtml(rec.recDose)} units tonight</div>
+      <div>${basisLine}</div>
+      <div class="small">
+        Target: ${state.settings.fbgLow.toFixed(1)}–${state.settings.fbgHigh.toFixed(1)} mmol/L ·
+        Current dose before rec: <span class="mono">${escapeHtml(state.settings.currentDose)}</span> units ·
+        Adjustment: <span class="mono">${rec.delta > 0 ? "+" : ""}${rec.delta}</span> units
+      </div>
+      <div style="margin-top:10px">${escapeHtml(rec.recText)}</div>
+    </div>
+  `;
+  resultWrap.innerHTML = html;
+  resultWrap.classList.remove("hidden");
+}
+
+function renderEntryDefaults(){
+  entryDateEl.value = isoToday();
+  hadHypoEl.value = "no";
+  notesEl.value = "";
+  todayFbgEl.value = "";
+}
+
+document.getElementById("btnAddEntry").addEventListener("click", () => {
+  if(!isBasalInsulin(state.selectedInsulinId)){
+    alert("Please select a basal insulin (including Ryzodeg) to use this titration flow.");
+    setStep(1);
+    return;
+  }
+
+  const s = state.settings;
+  if(!(Number.isFinite(s.fbgLow) && Number.isFinite(s.fbgHigh) && Number.isFinite(s.doseMax) && Number.isFinite(s.currentDose))){
+    alert("Please complete clinician settings first.");
+    setStep(3);
+    return;
+  }
+
+  const fbg = parseNum(todayFbgEl.value);
+  if(fbg === null || fbg <= 0){
+    alert("Please enter a valid fasting glucose value (mmol/L).");
+    return;
+  }
+  const dateISO = entryDateEl.value || isoToday();
+  const hadHypo = hadHypoEl.value === "yes";
+  const notes = (notesEl.value || "").trim();
+
+  const already = state.entries.some(e => e.dateISO === dateISO);
+  if(already){
+    alert("An entry already exists for this date. Please change the date or reset history.");
+    return;
+  }
+
+  const rec = makeRecommendation({ entryDateISO: dateISO, fbg, hadHypoNow: hadHypo });
+
+  const entry = {
+    dateISO,
+    fbg,
+    hadHypo,
+    notes,
+    recDose: rec.recDose,
+    recText: rec.recText,
+    delta: rec.delta,
+    usedAvg: rec.usedAvg,
+    avg3: rec.avg3,
+    withinTarget: rec.withinTarget,
+    urgentLow: rec.urgentLow
+  };
+  state.entries.push(entry);
+
+  state.settings.currentDose = rec.recDose;
+
+  if(rec.delta > 0){
+    state.lastIncreaseDateISO = dateISO;
+  }
+
+  saveState();
+
+  renderResultBox(entry, rec);
+  renderHistory();
+  renderKPIs();
+  renderEntryDefaults();
+});
+
+document.getElementById("btnBack3").addEventListener("click", () => setStep(3));
+document.getElementById("btnResetAll4").addEventListener("click", resetAll);
+
+/* -----------------------------
+   Routing / Step visibility
+------------------------------ */
+function renderSteps(){
+  const s = state.step;
+  document.getElementById("step1").classList.toggle("hidden", s !== 1);
+  document.getElementById("step2").classList.toggle("hidden", s !== 2);
+  document.getElementById("step3").classList.toggle("hidden", s !== 3);
+  document.getElementById("step4").classList.toggle("hidden", s !== 4);
+  setPillsActive(s);
+
+  if(s > 1 && !isBasalInsulin(state.selectedInsulinId)){
+    state.step = 1;
+    saveState();
+    renderSteps();
+  }
+}
+
+function renderAll(){
+  renderInsulinList();
+  renderStep1Gate();
+  renderStrategy();
+  renderSettings();
+  renderStep4StrategyText();
+  renderKPIs();
+  renderHistory();
+  renderSteps();
+
+  const ins = chosenInsulin();
+  if(ins){
+    chosenInsulinTag.textContent = `Selected: ${ins.name}`;
+  }
+  if(!entryDateEl.value) entryDateEl.value = isoToday();
+
+  if(state.entries.length === 0){
+    resultWrap.classList.add("hidden");
+    resultWrap.innerHTML = "";
+  }
+}
+
+/* -----------------------------
+   Step pill navigation
+------------------------------ */
+document.querySelectorAll(".pill").forEach(p => {
+  p.addEventListener("click", () => {
+    const n = Number(p.getAttribute("data-step"));
+    if(n <= state.step){
+      setStep(n);
+      return;
+    }
+    if(n > 1 && !isBasalInsulin(state.selectedInsulinId)){
+      setStep(1);
+      return;
+    }
+    if(n === 3 || n === 4){
+      const s = state.settings;
+      const ok = Number.isFinite(s.fbgLow) && Number.isFinite(s.fbgHigh) &&
+                 Number.isFinite(s.doseMax) && Number.isFinite(s.currentDose);
+      if(!ok){ setStep(3); return; }
+    }
+    setStep(n);
+  });
+});
+
+/* -----------------------------
+   Boot
+------------------------------ */
+renderAll();
 </script>
-
 </body>
 </html>
